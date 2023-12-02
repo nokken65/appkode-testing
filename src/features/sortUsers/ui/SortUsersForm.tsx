@@ -1,48 +1,42 @@
-import { submit, useForm, useFormStore } from '@modular-forms/react'
+import { submit, useForm } from '@modular-forms/react'
+import { useUnit } from 'effector-react'
 
 import { SORT } from '@/shared/constants'
 
-import { Sort } from '../model/models'
-
-type SortUsersForm = { sort: { ids: Sort[] } }
+import { sortUsers } from '../model'
+import { SortUsersFormFieldValues } from '../model/models'
+import { SortUserRadioField } from './SortUserRadioField'
 
 export const SortUsersForm = () => {
-  const [form, { Field, Form, FieldArray }] = useForm<SortUsersForm>({
+  const setSort = useUnit(sortUsers.settedSort)
+  const [form, { Field, Form }] = useForm<SortUsersFormFieldValues>({
     initialValues: {
-      sort: { ids: ['byAlphabet', 'byBirthday'] }
+      sort: 'byAlphabet'
     }
   })
 
   return (
     <Form
       onChange={() => submit(form)}
-      onSubmit={(v) => {
-        console.log(v)
-      }}
+      onSubmit={(v) => setSort(v.sort)}
     >
-      <FieldArray name={'sort.ids'}>
-        {(fieldArray) =>
-          fieldArray.items.value.map((item, index) => (
-            <Field
-              name={`sort.ids.${index}`}
-              key={item}
-            >
-              {(field, props) => (
-                <label>
-                  <input
-                    {...props}
-                    name={fieldArray.name}
-                    type="radio"
-                    value={field.value.value}
-                    defaultChecked={SORT.IDS[0] === field.value.value}
-                  />
-                  {SORT.LABELS[index]}
-                </label>
-              )}
-            </Field>
-          ))
-        }
-      </FieldArray>
+      {SORT.IDS.map((id, index) => (
+        <Field
+          name="sort"
+          key={id}
+          type="string"
+        >
+          {(field, props) => (
+            <SortUserRadioField
+              {...props}
+              checked={!!field.value.value?.includes(id)}
+              value={id}
+              error={field.error}
+              label={SORT.LABELS[index]}
+            />
+          )}
+        </Field>
+      ))}
     </Form>
   )
 }
